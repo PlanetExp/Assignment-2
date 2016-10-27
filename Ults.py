@@ -110,7 +110,7 @@ def plot_cross_validation(predicted,y):
     ax.set_ylabel('Predicted')
     plt.show()
 
-def grid_seach(clf,tuned_parameters,score,cv,X_train,y_train,X_test,y_test,plot = False):
+def grid_seach(clf,tuned_parameters,cv,X_train,y_train,X_test,y_test,plot = False):
     """ Parameter estimation using grid search with cross validation
          Parameters
         ----------
@@ -157,7 +157,7 @@ def grid_seach(clf,tuned_parameters,score,cv,X_train,y_train,X_test,y_test,plot 
     """
 
     clf = GridSearchCV(clf,param_grid= tuned_parameters,cv=cv,n_jobs=-1,pre_dispatch=2,refit=True,
-                      error_score=0,verbose=5,scoring='%s_marcro' %score)
+                      error_score=0,verbose=2,scoring='accuracy')
     clf.fit(X_train,y_train)
     print("Best parameters set found on training set:")
     print()
@@ -183,7 +183,7 @@ def grid_seach(clf,tuned_parameters,score,cv,X_train,y_train,X_test,y_test,plot 
     print()
 
     if(plot):
-        plt.plot(clf.cv_results_['[params'],means)
+        plt.plot(clf.cv_results_['params'],means)
         plt.xlabel('Value of params')
         plt.ylabel("Cross validated Accuracy")
 
@@ -260,6 +260,35 @@ def plot_KNearNeibours(k_range,k_scores):
     plt.plot(k_range,k_scores)
     plt.xlabel('Value of K for KNN')
     plt.ylabel('Cross-validated Accuracy')
+
+def simple_line_plot(X,y,figure_no):
+    plt.figure(figure_no)
+    plt.plot(X,y)
+    plt.xlabel('X values')
+    plt.ylabel('y values')
+    plt.title('Simple Line')
+
+def simple_dots(X,y,figure_no):
+    plt.figure(figure_no)
+    plt.plot(X,y,'or')
+    plt.xlabel('X values')
+    plt.ylabel('y values')
+    plt.title('Simple dots')
+
+def simple_scatter(X,y,figure_no):
+    plt.figure(figure_no)
+    plt.scatter(X,y)
+    plt.xlabel('X values')
+    plt.ylabel('y values')
+    plt.title('Simple Scatter')
+
+def simple_scatter_with_color(X,y,labels,figure_no):
+    plt.figure(figure_no)
+    plt.scatter(X,y,c=labels)
+    plt.xlabel('X values')
+    plt.ylabel('y values')
+    plt.title('Scatter with color')
+
 
 
 

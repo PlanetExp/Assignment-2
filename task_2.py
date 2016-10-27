@@ -7,12 +7,14 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import  KNeighborsClassifier
 from sklearn.svm import SVC
 
-
+from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis,QuadraticDiscriminantAnalysis
 from sklearn.naive_bayes import MultinomialNB,GaussianNB
 from sklearn.model_selection import learning_curve, ShuffleSplit
 from sklearn.metrics import brier_score_loss, precision_score, recall_score,f1_score
 from sklearn.calibration import CalibratedClassifierCV, calibration_curve
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import  BaggingClassifier,AdaBoostClassifier,GradientBoostingClassifier
 
 filename = "Naive_BayesClassifier.pkl"
 
@@ -20,7 +22,33 @@ filename = "Naive_BayesClassifier.pkl"
 data = DataProcessing()
 
 # Get the transformed data
-X_train_scale,X_test_scale = data.standard_scaler()
+X_train_scale,X_test_scale = data.normalize()
+
+
+# pca =PCA(whiten=True)
+# X_transform = pca.fit_transform(X_train_scale)
+# X_test_transform = pca.fit_transform(X_test_scale)
+#
+# X_transform2 = pca.fit_transform(data.X_train)
+# X_test_transform2 = pca.fit_transform(data.X_test)
+#
+# normalizer = preprocessing.Normalizer(norm='l2')
+# X_transform_n = normalizer.fit_transform(X_transform2)
+# X_test_transform_n = normalizer.fit_transform(X_test_transform2)
+#
+# lda = LinearDiscriminantAnalysis()
+# X_transform3 = lda.fit(X_train_scale,data.y_train).transform(X_train_scale)
+# X_test_transform3 = lda.fit(X_test_scale,data.y_test).transform(X_test_scale)
+#
+# X_transform4 = lda.fit(data.X_train,data.y_train).transform(data.X_train)
+#X_test_transform4 = lda.fit(data.X_test,data.y_test).transform(data.X_test)
+
+# qda = QuadraticDiscriminantAnalysis
+# X_transform5 = qda.fit(X_train_scale,data.y_train).transform(X_train_scale)
+# X_test_transform5 = qda.fit(X_test_scale,data.y_test).transform(X_test_scale)
+#
+# X_transform6 = qda.fit_transform(data.X_train)
+# X_test_transform6 = qda.fit_transform(data.X_test)
 # X_train_nor,X_test_nor = data.normalize()
 # X_train_minmax,X_test_minmax = data.min_max_scaler()
 # X_train_abs,X_test_abs = data.maxAbs_scaler()
@@ -131,39 +159,73 @@ def test_scaling_features():
 """
 #test_scaling_features()
 
-clf = GaussianNB()
-train_and_evaluate(clf,X_train_scale,data.y_train,X_test_scale,data.y_test)
+#clf1 = GaussianNB()
+#train_and_evaluate(clf1,data.X_train,data.y_train,data.X_test,data.y_test)
+
+clf2 = DecisionTreeClassifier()
+train_and_evaluate(clf2,X_train_scale,data.y_train,X_test_scale,data.y_test)
+#
+# print ("LDA")
+# clf3 = GaussianNB()
+# train_and_evaluate(clf3,X_transform3,data.y_train,X_test_transform3,data.y_test)
+#
+# clf4 = GaussianNB()
+# train_and_evaluate(clf4,X_transform4,data.y_train,X_test_transform4,data.y_test)
 
 
-"""
-[ 0.62774358  0.62715639  0.63132745  0.62883696  0.6322919   0.63297291
-  0.63339813  0.63339071  0.62902213  0.62823758]
-Mean score:0.630 (+/-0.001)
-Accuracy on testing set:
-0.630037176427
-Accuracy: 0.632
+# clf1 = DecisionTreeClassifier()
+# train_and_evaluate(clf1,data.X_train,data.y_train,data.X_test,data.y_test)
+#
+# clf2 = DecisionTreeClassifier()
+# train_and_evaluate(clf2,X_train_scale,data.y_train,X_test_scale,data.y_test)
+#
+# print ("PCA")
+# clf5 = DecisionTreeClassifier()
+# train_and_evaluate(clf5,X_transform,data.y_train,X_test_transform,data.y_test)
+#
+# clf6 = DecisionTreeClassifier()
+# train_and_evaluate(clf6,X_transform2,data.y_train,X_test_transform2,data.y_test)
 
-Classification report
-             precision    recall  f1-score   support
-
-          1       0.63      0.68      0.65     31946
-          2       0.73      0.66      0.69     42414
-          3       0.50      0.67      0.57      5336
-          4       0.44      0.39      0.42       388
-          5       0.17      0.21      0.19      1458
-          6       0.33      0.29      0.31      2578
-          7       0.25      0.26      0.26      3032
-
-avg / total       0.64      0.63      0.63     87152
+# clf4 = GaussianNB()
+# train_and_evaluate(clf4,X_transform_n,data.y_train,X_test_transform_n,data.y_test)
 
 
-Confussion matrix
-[[21566  7953   226     0   319    97  1785]
- [10234 27865  1827     0  1118   818   552]
- [    0  1066  3592   150    18   510     0]
- [    0     1   177   153     0    57     0]
- [    1  1059    53     0   312    33     0]
- [    0   465  1284    44    25   760     0]
- [ 2202    17    20     0     0     0   793]]
-"""
+
+
+
+# print "Bagging"
+# bagging = BaggingClassifier(GaussianNB(),n_estimators=20,random_state=9)
+# train_and_evaluate(bagging,data.X_train,data.y_train,data.X_test,data.y_test)
+#
+# print "Ada"
+# boosting = AdaBoostClassifier(GaussianNB(),n_estimators=20,random_state=9)
+# train_and_evaluate(boosting,data.X_train,data.y_train,data.X_test,data.y_test)
+#
+# print "Gradient"
+# gradient = GradientBoostingClassifier(GaussianNB(),n_estimators=20,random_state=9)
+# train_and_evaluate(gradient,data.X_train,data.y_train,data.X_test,data.y_test)
+
 Save_Classifier(clf,file_name=filename)
+
+"""
+    Non-normalize: 0.456
+    Normalize: 0.378
+    LDA + non-normalize: 0.653
+    LDA + normalize: 0.645
+    non-normalize + PCA: 0.558
+    normalize + PCA: 0.525
+    PCA + non-normalize + whiten: 0.446
+    normalize + PCA + whiten: 0.404
+    PCA + normalize: 0.463
+    PCA + normalize + whiten: 0.567
+"""
+"""
+    Decision Tree
+    Non-normalize: 0.859
+    Normalize: 0.854
+
+    PCA + non-normalize: 0.844
+    PCA + normalize: 0.829
+
+    Fix normalize: 0.853
+"""

@@ -1,5 +1,7 @@
+from __future__ import division
+
 import pickle
-from sklearn.model_selection import train_test_split,cross_val_score,KFold
+from sklearn.model_selection import train_test_split,cross_val_score,KFold, StratifiedShuffleSplit
 from sklearn import  svm
 from sklearn import preprocessing
 from sklearn.pipeline import make_pipeline
@@ -9,7 +11,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 import scipy.stats.stats as st
-
+from sklearn.base import TransformerMixin,BaseEstimator
+from sklearn.utils.validation import check_is_fitted
+from sklearn.utils import check_array,as_float_array
+from scipy import linalg
+from sklearn.decomposition import  PCA
 
 """ Import data set"""
 with open('forest_data.pickle', 'rb') as f:
@@ -33,7 +39,32 @@ class DataProcessing():
     seed = 42;
 
     def __init__(self):
+        # Let us shuffle the data set
+        #np.random.shuffle()
         self.X_train,self.X_test,self.y_train,self.y_test = train_test_split(data,target,test_size=self.test_size,random_state=self.seed)
+
+
+    def shuffle_dataset(self):
+
+        # Shuffle the dataset
+        np.random.shuffle(input_dataset)
+
+        # Prepare a stratisfied train and test split
+        train_size = 0.85
+        test_size = 1 - train_size
+
+        # For ease we merge the data and target
+        input_dataset = np.column_stack([data, target])
+
+        stratified_split = StratifiedShuffleSplit(input_dataset[:,-1],test_size=test_size,n_splits=1)
+
+        for train_indx, test_indx in stratified_split:
+            X_train = input_dataset[train_indx,:-1]
+            y_train = input_dataset[train_indx,-1]
+            X_test = input_dataset[test_indx,:-1]
+            y_test = input_dataset[test_indx,-1]
+
+        return  X_train,y_train,X_test,y_test
 
     def check_missing_value(self):
         """ Check missing value of data set
@@ -129,17 +160,17 @@ class DataProcessing():
             Transform X_train and X_test then return them
         """
         scaler = preprocessing.StandardScaler()
-        X_train_scale = scaler.fit_transform(self.X_train[:,:10])
-        X_test_scale = scaler.fit_transform(self.X_test[:,:10])
-        return X_train_scale,X_test_scale
+        X_train_scale = scaler.fit_transform(self.X_train)
+        X_test_scale = scaler.transform(self.X_test)
+        return X_train_scale, X_test_scale
 
     def normalize(self):
         """ Scaling feature using Normalize
             Transform X_train and X_test then return them
         """
-        normalizer = preprocessing.Normalizer(norm='l1')
-        X_train_scale = normalizer.fit_transform(self.X_train[:,:10])
-        X_test_scale = normalizer.fit_transform(self.X_test[:,:10])
+        normalizer = preprocessing.Normalizer(norm='l2')
+        X_train_scale = normalizer.fit_transform(self.X_train)
+        X_test_scale = normalizer.transform(self.X_test)
         return X_train_scale, X_test_scale
 
     def min_max_scaler(self):
@@ -147,8 +178,8 @@ class DataProcessing():
             Transform X_train and X_test then return them
         """
         min_max_scaler = preprocessing.MinMaxScaler()
-        X_train_scale = min_max_scaler.fit_transform(self.X_train[:,:10])
-        X_test_scale = min_max_scaler.fit_transform(self.X_test[:,:10])
+        X_train_scale = min_max_scaler.fit_transform(self.X_train)
+        X_test_scale = min_max_scaler.transform(self.X_test)
         return X_train_scale, X_test_scale
 
     def maxAbs_scaler(self):
@@ -156,8 +187,8 @@ class DataProcessing():
             Transform X_train and X_test then return them
         """
         maxAbs = preprocessing.MaxAbsScaler()
-        X_train_scale = maxAbs.fit_transform(self.X_train[:,:10])
-        X_test_scale = maxAbs.fit_transform(self.X_test[:,:10])
+        X_train_scale = maxAbs.fit_transform(self.X_train)
+        X_test_scale = maxAbs.transform(self.X_test)
         return X_train_scale, X_test_scale
 
 def Save_Classifier(clf,file_name):
@@ -173,7 +204,7 @@ def Load_Classifier(file_name):
     """
     return joblib.load(file_name)
 
-#a = DataProcessing()
+a = DataProcessing()
 
 # Plot the class distribution
 #a.plot_features()

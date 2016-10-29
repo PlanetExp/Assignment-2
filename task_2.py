@@ -10,6 +10,18 @@ from sklearn.tree import DecisionTreeClassifier
 
 from sklearn.decomposition import PCA
 from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.naive_bayes import BernoulliNB
+
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+import matplotlib.pyplot as plt
+from sklearn.linear_model import SGDClassifier
+
+from time import time
+import itertools
+import numpy as np
+from sklearn import metrics
 
 # from sklearn.neighbors import  KNeighborsClassifier
 
@@ -32,29 +44,33 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 filename = 'Naive_BayesClassifier'
 
-# Get the data
+# --------------------------
+# Loading data
+
 data = DataProcessing()
 
-# Get the transformed data
+# normalise
 X_train_scale, X_test_scale = data.normalize()
 
+# Principal component analysis
 pca = PCA()
-X_transform = pca.fit_transform(X_train_scale)
-X_test_transform = pca.fit_transform(X_test_scale)
+X_train_scale_pca = pca.fit_transform(X_train_scale)
+X_test_scale_pca = pca.fit_transform(X_test_scale)
 
-X_transform2 = pca.fit_transform(data.X_train)
-X_test_transform2 = pca.fit_transform(data.X_test)
+# Principal component analysis
+# pca = PCA()
+# X_transform_scale = pca.fit_transform(X_train_scale)
+# X_test_transform_scale = pca.fit_transform(X_test_scale)
 
-# normalizer = preprocessing.Normalizer(norm='l2')
-# X_transform_n = normalizer.fit_transform(X_transform2)
-# X_test_transform_n = normalizer.fit_transform(X_test_transform2)
+# X_transform2 = pca.fit_transform(data.X_train)
+# X_test_transform2 = pca.fit_transform(data.X_test)
 
-lda = LinearDiscriminantAnalysis()
-X_transform3 = lda.fit(X_train_scale, data.y_train).transform(X_train_scale)
-X_test_transform3 = lda.fit(X_test_scale, data.y_test).transform(X_test_scale)
+# lda = LinearDiscriminantAnalysis()
+# X_transform3 = lda.fit(X_train_scale, data.y_train).transform(X_train_scale)
+# X_test_transform3 = lda.fit(X_test_scale, data.y_test).transform(X_test_scale)
 
-X_transform4 = lda.fit(data.X_train, data.y_train).transform(data.X_train)
-X_test_transform4 = lda.fit(data.X_test, data.y_test).transform(data.X_test)
+# X_transform4 = lda.fit(data.X_train, data.y_train).transform(data.X_train)
+# X_test_transform4 = lda.fit(data.X_test, data.y_test).transform(data.X_test)
 
 # qda = QuadraticDiscriminantAnalysis
 # X_transform5 = qda.fit(X_train_scale, data.y_train).transform(X_train_scale)
@@ -66,23 +82,118 @@ X_test_transform4 = lda.fit(data.X_test, data.y_test).transform(data.X_test)
 # X_train_minmax, X_test_minmax = data.min_max_scaler()
 # X_train_abs, X_test_abs = data.maxAbs_scaler()
 
+# ------------------------------------------
+# Running test
+
+score = []
+
+def benchmark(clf_class, params, name, X_train=data.X_train, X_test=data.X_test):
+    print("parameters:", params)
+    t0 = time()
+    clf = clf_class(**params).fit(X_train, data.y_train)
+    print 'done in %fs' % (time() - t0)
+
+    if hasattr(clf, 'coef_'):
+        print("Percentage of non zeros coef: %f"
+              % (np.mean(clf.coef_ != 0) * 100))
+    print 'Predicting the outcomes of the testing set'
+    t0 = time()
+    pred = clf.predict(X_test)
+    accuracy = metrics.accuracy_score(data.y_test, pred)
+
+    print 'Accuracy: {0:.3f}%\n'.format(accuracy)
+    print 'done in {0}s'.format((time() - t0))
+
+    print 'Classification report on test set for classifier:'
+    print clf
+    print ''
+    print classification_report(data.y_test, pred)
+
+    cm = confusion_matrix(data.y_test, pred)
+    print 'Confusion matrix:'
+    print cm
+
+    # Show confusion matrix
+    plt.figure()
+    plt.imshow(cm, interpolation='nearest')
+
+    # plot text
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, cm[i, j],
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    # plot labels
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    
+    # plt.matshow(cm)
+    plt.title('Classifier: {0}, Accuracy: {1}'.format(name, accuracy))
+    plt.colorbar()
+
+
+# print("Testbenching a linear classifier...")
+# parameters = {
+#     'loss': 'hinge',
+#     'penalty': 'l2',
+#     'n_iter': 50,
+#     'alpha': 0.00001,
+#     'fit_intercept': True,
+# }
+
+# benchmark(SGDClassifier, parameters, 'SGD')
 
 print 'Naive Bayes'
-print 'GaussianNB'
-clf1 = GaussianNB()
-train_and_evaluate(clf1, data.X_train, data.y_train, data.X_test, data.y_test)
 
-print 'Decision Tree'
-clf2 = DecisionTreeClassifier()
-train_and_evaluate(clf2, X_train_scale, data.y_train, X_test_scale, data.y_test)
+print("Testbenching a BernoulliNB classifier...")
+parameters = {'alpha': 0.01}
+benchmark(BernoulliNB, parameters, 'MultinomialNB')
 
-print 'GaussianNB LDA'
-clf3 = GaussianNB()
-train_and_evaluate(clf3, X_transform3, data.y_train, X_test_transform3, data.y_test)
+print("Testbenching a BernoulliNB normalised data")
+parameters = {'alpha': 0.01}
+benchmark(BernoulliNB, parameters, 'MultinomialNB normalised', X_train_scale, X_test_scale)
 
-print 'GaussianNB '
-clf4 = GaussianNB()
-train_and_evaluate(clf4, X_transform4, data.y_train, X_test_transform4, data.y_test)
+print("Testbenching a BernoulliNB with PCA")
+parameters = {'alpha': 0.01}
+benchmark(BernoulliNB, parameters, 'MultinomialNB with PCA', X_train_scale_pca, X_test_scale_pca)
+
+# print("Testbenching a GaussianNB classifier...")
+# parameters = {}
+# benchmark(GaussianNB, parameters, 'GaussianNB')
+
+print("Testbenching a GaussianNB classifier with normalised data")
+parameters = {}
+benchmark(GaussianNB, parameters, 'GaussianNB with normalised data', X_train_scale, X_test_scale)
+
+print("Testbenching a GaussianNB with PCA")
+parameters = {}
+benchmark(GaussianNB, parameters, 'GaussianNB with PCA', X_train_scale_pca, X_test_scale_pca)
+
+plt.show()
+
+
+
+
+
+
+
+
+# print 'GaussianNB'
+# clf0 = GaussianNB()
+# train_and_evaluate(clf0, data.X_train, data.y_train, data.X_test, data.y_test)
+
+# print 'GaussianNB normalised'
+# clf1 = GaussianNB()
+# train_and_evaluate(clf1, X_train_scale, data.y_train, X_test_scale, data.y_test)
+
+# print 'Gaussian'
+# clf3 = GaussianNB()
+# train_and_evaluate(clf3, X_transform3, data.y_train, X_test_transform3, data.y_test)
+
+# print 'GaussianNB '
+# clf4 = GaussianNB()
+# train_and_evaluate(clf4, X_transform4, data.y_train, X_test_transform4, data.y_test)
 
 
 # clf1 = DecisionTreeClassifier()
@@ -119,9 +230,8 @@ train_and_evaluate(clf4, X_transform4, data.y_train, X_test_transform4, data.y_t
 
 # Save_Classifier(clf, file_name=filename)
 
-
-
-# ---------- Results ------------
+# -------------------------------
+# Results
 
 """
     Non-normalize: 0.456
@@ -240,3 +350,7 @@ train_and_evaluate(clf4, X_transform4, data.y_train, X_test_transform4, data.y_t
 #     plt.tight_layout()
 
 #     plt.show()
+
+# print 'Decision Tree'
+# clf2 = DecisionTreeClassifier()
+# train_and_evaluate(clf2, X_train_scale, data.y_train, X_test_scale, data.y_test)

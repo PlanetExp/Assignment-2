@@ -91,7 +91,7 @@ def measure_performance(clf, X, y, show_accuracy=True, show_classification_repor
         print "Classification report"
         print metrics.classification_report(y, y_pred), "\n"
     if show_confussion_matrix:
-        print "Confussion matrix"
+        print "Confusion matrix"
         print metrics.confusion_matrix(y, y_pred), "\n"
     if show_plot:
         plot_cross_validation(y_pred, y)

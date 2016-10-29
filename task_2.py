@@ -25,7 +25,7 @@ data = DataProcessing()
 X_train_scale,X_test_scale = data.normalize()
 
 
-# pca =PCA(whiten=True)
+pca =PCA(whiten=True)
 # X_transform = pca.fit_transform(X_train_scale)
 # X_test_transform = pca.fit_transform(X_test_scale)
 #

@@ -30,7 +30,6 @@ print(data.shape, data.dtype)
 print(target.shape, target.dtype)
 
 
-
 class DataProcessing():
     # Test size use to split the data
     test_size = 0.15

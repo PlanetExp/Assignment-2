@@ -95,3 +95,6 @@ ENV/
 
 # images
 *.png
+
+# macOS
+.DS_Store

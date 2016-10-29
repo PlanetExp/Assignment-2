@@ -2,11 +2,20 @@ import numpy as np
 import itertools
 import matplotlib.pyplot as plt
 
-from sklearn.model_selection import cross_val_score,cross_val_predict,KFold, GridSearchCV, RandomizedSearchCV, StratifiedKFold
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_predict
+from sklearn.model_selection import GridSearchCV
+
+# unused
+# from sklearn.model_selection import KFold
+# from sklearn.model_selection import RandomizedSearchCV
+# from sklearn.model_selection import StratifiedKFold
+
 from scipy.stats import sem
 from sklearn import metrics
 # from sklearn.grid_search import GridSearchCV
 # from sklearn.grid_search import RandomizedSearchCV
+
 
 def plot_confusion_matrix(clf, classes, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues):
     """
@@ -56,29 +65,28 @@ def plot_confusion_matrix(clf, classes, normalize=False, title='Confusion matrix
 
 
 # K-fold cross-validation
-def evaluate_cross_validation(clf,X,y):
+def evaluate_cross_validation(clf, X, y):
 
     # Create a k-fold cross validation iterator
     # Evaluate on training data and mean score
     # evaluate_cross_validation(svc_1,X_train,y_train,5)
-    #cv = StratifiedKFold(n_splits = 10,shuffle=True,random_state=0)
+    # cv = StratifiedKFold(n_splits = 10,shuffle=True,random_state=0)
 
     # print ('{}{:^61} {}'.format('Interation','Training set observations', 'Testing set observations'))
     # for interation,data in enumerate(clf,start=1):
     #     print ('{:^9}{}{:^25}'.format(interation,data[0],data[1]))
 
+    scores = cross_val_score(clf, X, y, cv=10, n_jobs=-1)
+    print scores
+    print("Mean score:{0:.3f} (+/-{1:.3f})").format(np.mean(scores), sem(scores))
 
-    scores = cross_val_score(clf,X,y,cv=10,n_jobs=-1)
-    print  scores
-    print ("Mean score:{0:.3f} (+/-{1:.3f})").format(np.mean(scores),sem(scores))
 
-
-def measure_performance(X,y,clf,show_accuracy = True, show_classification_report = True, show_confussion_matrix = True,show_plot = False):
+def measure_performance(clf, X, y, show_accuracy=True, show_classification_report=True, show_confussion_matrix=True, show_plot=False):
 
     """ Predict with test data set """
-    y_pred = cross_val_predict(clf,X,y,cv=10)
+    y_pred = cross_val_predict(clf, X, y, cv=10)
     if(show_accuracy):
-        print "Accuracy: {0:.3f}".format(metrics.accuracy_score(y,y_pred)),"\n"
+        print "Accuracy: {0:.3f}".format(metrics.accuracy_score(y, y_pred)), "\n"
     if(show_classification_report):
         print "Classification report"
         print metrics.classification_report(y, y_pred), "\n"
@@ -86,29 +94,32 @@ def measure_performance(X,y,clf,show_accuracy = True, show_classification_report
         print "Confussion matrix"
         print metrics.confusion_matrix(y, y_pred), "\n"
     if show_plot:
-        plot_cross_validation(y_pred,y)
+        plot_cross_validation(y_pred, y)
 
-def train_and_evaluate(clf,X_train,y_train,X_test,y_test):
+
+def train_and_evaluate(clf, X_train, y_train, X_test, y_test):
     """ Function to perform training on the training set and
         evaluate the performance on the testing set """
-    clf.fit(X_train,y_train)
-    print "Accuracy on trainning set: "
-    evaluate_cross_validation(clf,X_train,y_train)
+    clf.fit(X_train, y_train)
+    print "Accuracy on training set: "
+    evaluate_cross_validation(clf, X_train, y_train)
 
     print "Accuracy on testing set: "
     print clf.score(X_test, y_test)
 
-    measure_performance(X_test, y_test, clf)
+    measure_performance(clf, X_test, y_test)
 
-def plot_cross_validation(predicted,y):
-    #predicted = cross_val_predict(clf, X, y, cv=10)
+
+def plot_cross_validation(y_pred, y):
+    # y_pred = cross_val_predict(clf, X, y, cv=10)
 
     fig, ax = plt.subplots()
-    ax.scatter(y, predicted)
+    ax.scatter(y, y_pred)
     ax.plot([y.min(), y.max()], [y.min(), y.max()], 'k--', lw=4)
     ax.set_xlabel('Measured')
     ax.set_ylabel('Predicted')
     plt.show()
+
 
 def grid_seach(clf,tuned_parameters,cv,X_train,y_train,X_test,y_test,plot = False):
     """ Parameter estimation using grid search with cross validation
@@ -156,9 +167,9 @@ def grid_seach(clf,tuned_parameters,cv,X_train,y_train,X_test,y_test,plot = Fals
 
     """
 
-    clf = GridSearchCV(clf,param_grid= tuned_parameters,cv=cv,n_jobs=-1,pre_dispatch=2,refit=True,
-                      error_score=0,verbose=2,scoring='accuracy')
-    clf.fit(X_train,y_train)
+    clf = GridSearchCV(clf,param_grid= tuned_parameters, cv=cv,n_jobs=-1, pre_dispatch=2, refit=True,
+                      error_score=0, verbose=2, scoring='accuracy')
+    clf.fit(X_train, y_train)
     print("Best parameters set found on training set:")
     print()
     print(clf.best_params_)
@@ -186,6 +197,7 @@ def grid_seach(clf,tuned_parameters,cv,X_train,y_train,X_test,y_test,plot = Fals
         plt.plot(clf.cv_results_['params'],means)
         plt.xlabel('Value of params')
         plt.ylabel("Cross validated Accuracy")
+
 
 def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
                         n_jobs=1, train_sizes=np.linspace(.1, 1.0, 5)):
